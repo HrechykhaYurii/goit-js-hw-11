@@ -29,7 +29,7 @@ export default class ImagesApiService {
 
       return response.data;
     } catch (error) {
-      console.warn(`${error}`);
+      throw new Error(error);
     }
   }
 

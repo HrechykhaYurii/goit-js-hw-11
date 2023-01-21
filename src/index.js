@@ -35,50 +35,95 @@ function onSearch(e) {
 
     if (!imagesApiService.query) {
     return erorrQuery();
-    }
+  }
+  
+  asyncImagesApiServiceSearch();
+  
+       // imagesApiService.fetchImages().then(({ hits, totalHits }) => {
+  //   if (!hits.length) {
+  //     return erorrQuery();
+  //   }
 
-    imagesApiService.fetchImages().then(({ hits, totalHits }) => {
-    if (!hits.length) {
-      return erorrQuery();
-    }
+  //   observer.observe(refs.wrapper);
+  //   imagesApiService.incrementLoadedHits(hits);
+  //   createGalleryMarkup(hits);
+  //   accessQuery(totalHits);
+  //   gallery.refresh();
 
-    observer.observe(refs.wrapper);
-    imagesApiService.incrementLoadedHits(hits);
-    createGalleryMarkup(hits);
-    accessQuery(totalHits);
-    gallery.refresh();
-
-    if (hits.length === totalHits) {
-      observer.unobserve(refs.wrapper);
-      endOfSearch();
-    }
-  });
+  //   if (hits.length === totalHits) {
+  //     observer.unobserve(refs.wrapper);
+  //     endOfSearch();
+  //   }
+  // });
 
   observer.unobserve(refs.wrapper);
 
 }
 
+async function asyncImagesApiServiceSearch() {
+  try {
+      const response = await imagesApiService.fetchImages();
+        if (!response.hits.length) {
+          return erorrQuery();
+        }
+   
+      observer.observe(refs.wrapper);
+      imagesApiService.incrementLoadedHits(response.hits);
+      createGalleryMarkup(response.hits);
+      accessQuery(response.totalHits);
+      gallery.refresh();
+
+      if (response.hits.length === response.totalHits) {
+        observer.unobserve(refs.wrapper);
+        endOfSearch();
+      }
+    
+  } catch (error) {
+    console.error("error: ", error.message);
+  }
+ }
+
 function onEntry(entries) {
   entries.forEach(entry => {
     if (entry.isIntersecting && imagesApiService.query) {
-      imagesApiService
-        .fetchImages()
-        .then(({ hits, totalHits }) => {
-          imagesApiService.incrementLoadedHits(hits);
-          if (totalHits <= imagesApiService.loadedHits) {
-            observer.unobserve(refs.wrapper);
-            endOfSearch();
-          }
+      asyncImagesApiServiceEntry();
+      // imagesApiService
+      //   .fetchImages()
+      //   .then(({ hits, totalHits }) => {
+      //     imagesApiService.incrementLoadedHits(hits);
+      //     if (totalHits <= imagesApiService.loadedHits) {
+      //       observer.unobserve(refs.wrapper);
+      //       endOfSearch();
+      //     }
 
-          createGalleryMarkup(hits);
-          smoothScrollGallery();
-          gallery.refresh();
-        })
-        .catch(error => {
-          console.warn(`${error}`);
-        });
+      //     createGalleryMarkup(hits);
+      //     smoothScrollGallery();
+      //     gallery.refresh();
+      //   })
+      //   .catch(error => {
+      //     console.warn(`${error}`);
+      //   });
     }
   });
+}
+
+async function asyncImagesApiServiceEntry() {
+
+  try {
+    const response = await imagesApiService.fetchImages();
+    
+    imagesApiService.incrementLoadedHits(response.hits);
+    if (response.totalHits <= imagesApiService.loadedHits) {
+      observer.unobserve(refs.wrapper);
+      endOfSearch();
+    }
+
+    createGalleryMarkup(response.hits);
+    smoothScrollGallery();
+    gallery.refresh();
+  } catch (error) {
+     console.warn(`${error}`);
+  }
 }
 
 
